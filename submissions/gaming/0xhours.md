@@ -1,87 +1,154 @@
-# vApp Submission: [Verifiable Random Number Generator for On-Chain Gaming]
+# vApp Submission: Verifiable Random Number Generator (VRNG) for On-Chain Gaming
 
 ## Verification
 ```yaml
 github_username: "0xhours"
 discord_id: "1184705235747340369"
-timestamp: "2025-01-15"
-```
+timestamp: "2025-08-25"
+````
 
 ## Developer
-- **Name**: Rizal Gilang Permana
-- **GitHub**: @0xhours
-- **Discord**: 0xhours
-- **Experience**: ### I am a blockchain developer with extensive hands-on experience in smart contract development, deployment, and node testing across multiple ecosystems, including Ethereum-compatible chains, Solana, IBC (Inter-Blockchain Communication), and others. While my GitHub repositories highlight specific technical tasks on the Swisstronik testnet—such as deploying a basic "Hello World" smart contract (Task 1), creating and minting ERC20 tokens with minting, burning, transferring, and balance check functionalities (Task 2), minting ERC721 NFTs with support for minting and burning (Task 3), and minting PERC20 tokens as a privacy-enhanced variant (Task 4)—I've also completed numerous node testing projects and deployments on various blockchains that aren't publicly uploaded.
 
-These additional experiences include setting up and running node testers on Solana for high-throughput validation, IBC for cross-chain interoperability testing, EVM-based networks for smart contract execution, and other protocols to ensure network stability and performance. My work spans a variety of programming languages beyond Solidity, such as Rust for Solana programs, Go for Cosmos/IBC integrations, and JavaScript/TypeScript for backend automation and cross-chain tooling. I've leveraged libraries like OpenZeppelin for ERC standards compliance, npm for scripting and dependency management, and frameworks like Anchor for Solana development.
+* **Name**: Rizal Gilang Permana
+* **GitHub**: [@0xhours](https://github.com/0xhours)
+* **Discord**: 0xhours
+* **Twitter/X**: [@0xhours](https://x.com/0xhours)
+* **Email**: [0xhours.eth@gmail.com](mailto:0xhours.eth@gmail.com)
 
-Additionally, I've built a Node.js-based bot using Axios for API interactions, showcasing my proficiency in full-stack blockchain solutions. My focus encompasses token standards, decentralized applications (dApps), multi-chain deployments, and testnet environments, with a strong emphasis on security and efficiency. I am active on Twitter (@0xhours).
+### Experience
+
+I am a blockchain developer with extensive hands-on experience in smart contract development, deployment, and node testing across multiple ecosystems, including **Ethereum-compatible chains, Solana, IBC, and others**.
+
+Highlights:
+
+* Deployed a basic **“Hello World” smart contract** on Swisstronik testnet.
+* Built **ERC20 tokens** with mint, burn, transfer, and balance check functionality.
+* Developed **ERC721 NFTs** with mint & burn support.
+* Implemented **PERC20 privacy-enhanced tokens**.
+* Set up nodes and validators on **Solana**, **Cosmos/IBC**, and **EVM chains** for interoperability testing.
+
+Stack: Solidity, Rust (Sui/Move, Solana), Go (Cosmos/IBC), JavaScript/TypeScript, OpenZeppelin, Anchor, zkVMs (SP1, RISC0).
+
+---
 
 ## Project
 
 ### Name & Category
-- **Project**: Sound-UP
-- **Category**: gaming
+
+* **Project**: Sound-UP (VRNG vApp)
+* **Category**: Gaming
 
 ### Description
-A decentralized, verifiable random number generator (VRNG) vApp that provides cryptographically secure randomness for on-chain games, lotteries, or NFTs. Traditional RNG in blockchain games relies on oracles or block hashes, which can be manipulated or predicted. This vApp uses zero-knowledge proofs (ZKPs) to generate and verify randomness from user-submitted entropy (e.g., commitments), ensuring fairness and tamper-resistance. Players can trust the outcomes without revealing seeds prematurely.
 
+**Sound-UP** is a decentralized **Verifiable Random Number Generator (VRNG)** vApp for on-chain gaming, lotteries, and NFTs.
 
-### SL Integration  
-  - Use SL's decentralized verifiers for proof submission and attestation, ensuring low-latency (<1s) validation.
-  - Store entropy data on Walrus for cheap, blob-based availability, with SL handling data integrity proofs.
-  - Inter-chain: Leverage SL's proof-agnostic framework for exporting verified randomness to chains like Ethereum (via ZK light clients).
+Unlike blockhash-based RNG or oracles (which can be manipulated), this vApp ensures **tamper-resistant, verifiable randomness** using **Zero-Knowledge Proofs (ZKPs)**.
 
-This solves trust issues in Web3 gaming, enabling provably fair mechanics and reducing disputes, while leveraging Soundness's low-latency verification for real-time play.
+**Features**
+
+* Multi-party entropy commitments.
+* ZK-verified randomness mixing.
+* Fair game integration (dice, cards, loot drops).
+* Cross-chain support via **Soundness Layer (SL)** with <1s latency.
+
+---
 
 ## Technical
 
 ### Architecture
-- **ZK Integration**: Employ zkVMs (e.g., SP1 or RISC0 from Soundness examples) to generate proofs for randomness computation. Circuits prove that the combined entropy is unbiased and correctly mixed (e.g., via SHA-3 hashing in ZK).
-- **Data Flow**: Users submit commitments → vApp aggregates off-chain → Generates ZK proof → SL verifies and attests on-chain → Game contracts consume the verified random value.
-- **Dependencies**: vApp SDK (Rust), zkVM libraries (e.g., SP1), Sui SDK, optional oracles for initial seeds if hybrid.
 
+* **Frontend**: React dApp with Sui Wallet integration.
+* **Backend**: Rust vApp on SL testnet; optional settlement on Sui Move.
+* **ZK**: SP1/RISC0 zkVM circuits validate SHA-3 entropy mixing.
+* **SL**: SL verifiers for proof attestation, Walrus for DA, cross-chain proof export.
+* **Flow**:
+  `Users commit entropy → vApp aggregates → zk proof → SL verifies → attestation → game contract consumes seed`.
 
-### Stack
-- **Frontend**: Web-based interface (e.g., React with Sui Wallet integration) for users to submit entropy commitments and view verified results.
-- **Backend**: Rust-based vApp DSL for core logic, deploying on Soundness Layer testnet. Use Sui Move for any settlement if needed.
-- **Blockchain**: SL 
-- **Storage**: WALRUS
+#### Example Handler (Simplified Rust Pseudocode)
 
-### Features
-- Multi-party entropy collection: Users contribute hashed inputs, combined into a final random value.
-- ZK-verified computation: Prove randomness generation without exposing individual contributions.
-- Integration with games: Output verifiable seeds for dice rolls, card shuffles, or loot drops.
-- Cross-chain support: Attest randomness to other chains via Soundness Layer's inter-chain verification.
+```rust
+mod VRNG {
+    use vapp::*;
+
+    #[derive(ProvableState)]
+    pub struct State {
+        entropy_pool: Vec<[u8; 32]>,
+        random_seed: [u8; 32],
+    }
+
+    #[derive(ProvableTx)]
+    pub struct SubmitEntropy {
+        commitment: [u8; 32],
+    }
+
+    #[derive(ProvableTx)]
+    pub struct GenerateRandom {}
+
+    #[vApp::Handler]
+    pub fn submit_entropy(tx: Context<SubmitEntropy>) -> Result<()> {
+        let mut pool = State().entropy_pool;
+        pool.push(tx.commitment);
+        State().entropy_pool = pool;
+        Ok(())
+    }
+
+    #[vApp::Handler]
+    pub fn generate_random(tx: Context<GenerateRandom>) -> Result<()> {
+        let pool = State().entropy_pool;
+        require!(pool.len() >= MIN_CONTRIBUTORS, ErrInsufficientEntropy);
+
+        let mut seed = [0u8; 32];
+        for commit in pool {
+            seed = sha3(seed + commit); // Simplified, real version runs in zkVM
+        }
+
+        State().random_seed = seed;
+        emit_event(RandomGenerated { seed });
+        Ok(())
+    }
+}
+```
+
+---
 
 ## Timeline
-Realistic Development TimelineWeek 1: Set up vApp SDK, research SL APIs/Walrus integration, implement basic entropy submission handler.
-Week 2: Develop ZK circuits for randomness mixing, integrate proof generation with zkVM.
-Week 3: Build frontend, test full flow on Soundness testnet, add error handling.
-Week 4: Optimize for latency, community review/audit, deploy MVP and document.
-Total: 4 weeks for a working PoC, assuming testnet access after approval.
 
-### PoC (2-4 weeks)
-- [ ] Basic functionality
-- [ ] SL integration
-- [ ] Simple UI
+**PoC (4 weeks)**
 
-### MVP (4-8 weeks)  
-- [ ] Full features
-- [ ] Production ready
-- [ ] User testing
+* Week 1: Setup vApp SDK, research SL/Walrus, implement entropy submission.
+* Week 2: ZK circuits + zkVM integration.
+* Week 3: Frontend build, E2E test on SL.
+* Week 4: Optimize latency, audit review, MVP deployment.
+
+**MVP (4–8 weeks)**
+
+* Expand to full VRNG service.
+* Cross-chain randomness export demo.
+* User testing & audit readiness.
+
+---
 
 ## Innovation
-What makes this unique? Why will people use it?
+
+* First **multi-party ZK-powered RNG** on **Soundness Layer**.
+* Combines **entropy commitments + zk proofs + cross-chain attestations**.
+* Enables **real-time provably fair gaming** (<1s latency).
+* Removes manipulation risks in Web3 gaming.
+
+---
 
 ## Contact
-= discord : @0xhours
-- x : @0xhours
-- email : 0xhours.eth@gmail.com
 
+* **Discord**: @0xhours
+* **Twitter/X**: @0xhours
+* **Email**: [0xhours.eth@gmail.com](mailto:0xhours.eth@gmail.com)
 
-**Checklist before submitting:**
-- [ ] All fields completed
-- [ ] GitHub username matches PR author  
-- [ ] SL integration explained
-- [ ] Timeline is realistic
+---
+
+## Checklist
+
+* [x] All fields completed
+* [x] GitHub username matches PR author
+* [x] SL integration explained
+* [x] Timeline realistic
+* [x] Example handler included
